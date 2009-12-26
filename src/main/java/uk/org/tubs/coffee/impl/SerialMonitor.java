@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
  * @author Toby Cole
  */
 public class SerialMonitor implements Runnable, SerialPortEventListener,
-		CoffeeMonitor {
+        CoffeeMonitor {
 
 	static CommPortIdentifier portId;
 	static Enumeration<CommPortIdentifier> portList;
@@ -69,7 +69,7 @@ public class SerialMonitor implements Runnable, SerialPortEventListener,
 
 		try {
 			serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8,
-					SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+			        SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 		} catch (UnsupportedCommOperationException e) {
 		}
 
@@ -136,7 +136,7 @@ public class SerialMonitor implements Runnable, SerialPortEventListener,
 
 		CoffeeStatus status = new CoffeeStatus(brewing, hotplateOn);
 		for (Iterator<CoffeeListener> iterator = coffeeListeners.iterator(); iterator
-				.hasNext();) {
+		        .hasNext();) {
 			CoffeeListener l = iterator.next();
 			l.coffeStatusChanged(status);
 		}
