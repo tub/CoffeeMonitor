@@ -1,0 +1,14 @@
+Coffee machine monitoring system.
+Arduino based hardware & Java software, allows you to monitor your coffee machine via XMPP/google chat etc
+
+Requirements:
+    Maven 2
+    RXTX java serial extention
+    Arduino, a couple of resistors and 2 LDRs
+    Some sort of wireless serial link (optional)
+    
+To build the java side of things, download the source and run:
+    mvn assembly:assembly
+    
+If successful you should be able to run the jar file using:
+    java -jar target/coffeeMonitor-0.0.1-SNAPSHOT-jar-with-dependencies.jar
