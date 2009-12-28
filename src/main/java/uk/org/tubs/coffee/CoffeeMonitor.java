@@ -1,7 +1,7 @@
 package uk.org.tubs.coffee;
 
-public interface CoffeeMonitor {
-	public void addCoffeeListener(CoffeeListener l);
+import java.util.List;
 
-	public boolean removeCoffeeListener(CoffeeListener l);
+public interface CoffeeMonitor {
+	public void setCoffeeListeners(List<CoffeeListener> l);
 }

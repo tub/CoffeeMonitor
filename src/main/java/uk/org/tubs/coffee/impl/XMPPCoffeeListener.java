@@ -7,12 +7,33 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.packet.Presence.Type;
 
-import com.eaio.util.text.HumanTime;
-
 import uk.org.tubs.coffee.CoffeeListener;
 
+import com.eaio.util.text.HumanTime;
+
 public class XMPPCoffeeListener implements CoffeeListener {
+	private final class UpdatePollingThread extends Thread {
+		XMPPCoffeeListener prodMe;
+		public UpdatePollingThread(XMPPCoffeeListener l){
+			prodMe = l;
+		}
+	    public void run(){
+	    	while(true){
+				try {
+					Thread.sleep(30000);// 30 seconds
+					prodMe.updateStatus();
+				} catch (InterruptedException e) {
+					System.err.println(e);
+				}
+			}
+		}
+    }
+
 	private String username, password, xmppServer = null;
+	
+	public XMPPCoffeeListener(){
+		new UpdatePollingThread(this).start();
+	}
 
 	public void setUsername(String username) {
 		this.username = username;
@@ -41,6 +62,7 @@ public class XMPPCoffeeListener implements CoffeeListener {
 	}
 
 	public void coffeStatusChanged(CoffeeStatus s) {
+		System.out.println(s);
 		try {
 			checkConnection();
 			conn.sendPacket(getPresence(s));
@@ -63,20 +85,38 @@ public class XMPPCoffeeListener implements CoffeeListener {
 		}
 
 		if (!s.isBrewing() && s.isHotplateOn()) {
-			// How long has the hotplate been on?
-			String brewedAgo = HumanTime.approximately(System
-			        .currentTimeMillis()
-			        - lastFinishedBrewing);
-			if ("".equals(brewedAgo)) {
-				brewedAgo = "a couple of secs";
-			}
-			brewedAgo = "Brewed " + brewedAgo + " ago.";
-			p = new Presence(Presence.Type.available, brewedAgo, 1,
+			p = new Presence(Presence.Type.available, getCoffeeAge(), 1,
 			        Mode.available);
+		}
+
+		if (!s.isBrewing() && !s.isHotplateOn()) {
+			// No lights on, no coffee!
+			p = new Presence(Presence.Type.available, "No coffee", 1, Mode.xa);
 		}
 
 		previousStatus = s;
 		return p;
+	}
+
+	private String getCoffeeAge() {
+		// How long has the hotplate been on?
+		String brewedAgo = HumanTime.approximately(System.currentTimeMillis()
+		        - lastFinishedBrewing);
+		if ("".equals(brewedAgo)) {
+			brewedAgo = "a couple of secs";
+		}
+		return "Brewed about " + brewedAgo + " ago.";
+	}
+
+	public void updateStatus() {
+		if (!previousStatus.isBrewing() && previousStatus.isHotplateOn()) {
+			try {
+				checkConnection();
+				conn.sendPacket(getPresence(previousStatus));
+			} catch (XMPPException e) {
+				throw new RuntimeException(e);
+			}
+		}
 	}
 
 }

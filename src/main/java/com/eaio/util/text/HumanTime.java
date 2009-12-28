@@ -697,7 +697,7 @@ public class HumanTime implements Externalizable, Comparable<HumanTime>,
 								rounded = mod <= lowerCeiling(SECOND);
 								prependBlank = true;
 							}
-
+							/* Ignore ms for now
 							if (parts < 2) {
 								d %= SECOND;
 
@@ -711,7 +711,7 @@ public class HumanTime implements Externalizable, Comparable<HumanTime>,
 									a.append('s');
 								}
 							}
-
+							*/
 						}
 
 					}

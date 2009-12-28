@@ -10,7 +10,6 @@ import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TooManyListenersException;
@@ -26,43 +25,48 @@ import com.google.common.collect.Lists;
  * 
  * @author Toby Cole
  */
-public class SerialMonitor implements Runnable, SerialPortEventListener,
+public class SerialMonitor extends Thread implements SerialPortEventListener,
         CoffeeMonitor {
 
-	static CommPortIdentifier portId;
-	static Enumeration<CommPortIdentifier> portList;
 	InputStream inputStream;
 	SerialPort serialPort;
-	Thread readThread;
+
 	// Number of serial errors since last successful read.
 	private int errs = 0;
 	// Number of errors before we give up and throw an exception :)
 	private int MAX_ERRS = 20;
 	private List<CoffeeListener> coffeeListeners = Lists.newArrayList();
 
-	@SuppressWarnings("unchecked")
-	public SerialMonitor(String serialPortID) {
+	public void setSerialPortID(String serialPortID) {
+
 		try {
-			portList = CommPortIdentifier.getPortIdentifiers();
-			portId = CommPortIdentifier.getPortIdentifier(serialPortID);
+			CommPortIdentifier portId = CommPortIdentifier
+			        .getPortIdentifier(serialPortID);
 			if (portId.getPortType() != CommPortIdentifier.PORT_SERIAL) {
-				throw new RuntimeException(portId + " is not a Serial port");
+				throw new RuntimeException(serialPortID
+				        + " is not a Serial port");
 			}
 			serialPort = (SerialPort) portId.open("SimpleReadApp", 2000);
 		} catch (PortInUseException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("The port '" + serialPortID
+			        + "' is already in use.", e);
 		} catch (NoSuchPortException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Couldn't find the serial port: "
+			        + serialPortID, e);
 		}
 
 		try {
 			inputStream = serialPort.getInputStream();
 		} catch (IOException e) {
+			throw new RuntimeException(
+			        "There was a problem reading from the serial port", e);
 		}
 
 		try {
 			serialPort.addEventListener(this);
 		} catch (TooManyListenersException e) {
+			throw new RuntimeException(
+			        "There was a problem reading from the serial port", e);
 		}
 
 		serialPort.notifyOnDataAvailable(true);
@@ -71,17 +75,8 @@ public class SerialMonitor implements Runnable, SerialPortEventListener,
 			serialPort.setSerialPortParams(9600, SerialPort.DATABITS_8,
 			        SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
 		} catch (UnsupportedCommOperationException e) {
-		}
-
-		readThread = new Thread(this);
-
-		readThread.start();
-	}
-
-	public void run() {
-		try {
-			Thread.sleep(20000);
-		} catch (InterruptedException e) {
+			throw new RuntimeException(
+			        "There was a problem reading from the serial port", e);
 		}
 	}
 
@@ -89,21 +84,13 @@ public class SerialMonitor implements Runnable, SerialPortEventListener,
 		switch (event.getEventType()) {
 
 		case SerialPortEvent.BI:
-
 		case SerialPortEvent.OE:
-
 		case SerialPortEvent.FE:
-
 		case SerialPortEvent.PE:
-
 		case SerialPortEvent.CD:
-
 		case SerialPortEvent.CTS:
-
 		case SerialPortEvent.DSR:
-
 		case SerialPortEvent.RI:
-
 		case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
 			break;
 
@@ -142,12 +129,7 @@ public class SerialMonitor implements Runnable, SerialPortEventListener,
 		}
 	}
 
-	public void addCoffeeListener(CoffeeListener l) {
-		coffeeListeners.add(l);
+	public void setCoffeeListeners(List<CoffeeListener> l) {
+		coffeeListeners = l;
 	}
-
-	public boolean removeCoffeeListener(CoffeeListener l) {
-		return coffeeListeners.remove(l);
-	}
-
 }
